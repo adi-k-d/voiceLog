@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,7 @@ const Header: React.FC = () => {
   return (
     <header className="w-full py-4 px-6 bg-white shadow-sm flex justify-between items-center">
       <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-full bg-voicelog-blue flex items-center justify-center">
+      <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
           <span className="text-white font-bold text-lg">V</span>
         </div>
         <h1 className="text-xl font-bold">VoiceLog</h1>
