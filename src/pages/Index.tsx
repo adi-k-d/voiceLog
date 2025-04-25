@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import Header from '@/components/Header';
 import NoteList from '@/components/NoteList';
 import { Button } from '@/components/ui/button';
@@ -39,10 +39,6 @@ const Index = () => {
     setTranscription('');
   };
 
-  const handleCreateNew = () => {
-    setIsDialogOpen(true);
-  };
-
   const renderDialogContent = () => {
     switch (step) {
       case 'category':
@@ -59,14 +55,14 @@ const Index = () => {
           </div>
         );
       case 'transcribe':
-        return (
+        return selectedCategory ? (
           <TranscriptionEditor
             transcription={transcription}
             category={selectedCategory}
             onSave={handleSaveNote}
             onCancel={handleClose}
           />
-        );
+        ) : null;
       default:
         return null;
     }
@@ -80,7 +76,7 @@ const Index = () => {
           <h1 className="text-3xl font-bold">Notes</h1>
           <Button onClick={() => setIsDialogOpen(true)}>Add New Note</Button>
         </div>
-        <NoteList notes={notes} onCreateNew={handleCreateNew} />
+        <NoteList notes={notes} onCreateNew={() => setIsDialogOpen(true)} />
 
         <Dialog open={isDialogOpen} onOpenChange={handleClose}>
           <DialogContent className="sm:max-w-md">

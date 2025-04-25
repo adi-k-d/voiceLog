@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { NoteCategory } from '@/components/CategorySelector';
 import { Note } from '@/components/NoteList';
@@ -8,6 +7,7 @@ import { toast } from 'sonner';
 
 interface NoteContextProps {
   notes: Note[];
+  loading: boolean;
   addNote: (text: string, category: NoteCategory) => Promise<void>;
   updateNote: (id: string, text: string) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
@@ -29,13 +29,18 @@ interface NoteProviderProps {
 
 export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const { user } = useAuth();
 
   // Fetch all notes from Supabase
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const fetchNotes = async () => {
+      setLoading(true);
       const { data, error } = await supabase
         .from('notes')
         .select('*')
@@ -44,6 +49,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
       if (error) {
         console.error('Error fetching notes:', error);
         toast.error('Failed to load notes');
+        setLoading(false);
         return;
       }
 
@@ -56,6 +62,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
       }));
 
       setNotes(formattedNotes);
+      setLoading(false);
     };
 
     fetchNotes();
@@ -151,7 +158,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
   };
 
   return (
-    <NoteContext.Provider value={{ notes, addNote, updateNote, deleteNote }}>
+    <NoteContext.Provider value={{ notes, loading, addNote, updateNote, deleteNote }}>
       {children}
     </NoteContext.Provider>
   );
