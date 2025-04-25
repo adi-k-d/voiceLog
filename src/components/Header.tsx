@@ -23,9 +23,11 @@ const Header: React.FC = () => {
   return (
     <header className="w-full py-4 px-6 bg-white shadow-sm flex justify-between items-center">
       <div className="flex items-center gap-2">
-      <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
-          <span className="text-white font-bold text-lg">V</span>
-        </div>
+        <img 
+          src="/Transparent-logo-full.png" 
+          alt="VoiceLog Logo" 
+          className="h-8 w-auto"
+        />
         <h1 className="text-xl font-bold">VoiceLog</h1>
       </div>
       {user ? (
