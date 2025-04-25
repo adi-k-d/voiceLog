@@ -101,6 +101,26 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
       return;
     }
 
+    // Explicitly fetch notes after adding a new one
+    const { data, error: fetchError } = await supabase
+      .from('notes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (fetchError) {
+      console.error('Error fetching notes after add:', fetchError);
+      return;
+    }
+
+    const formattedNotes: Note[] = data.map(note => ({
+      id: note.id,
+      text: note.content,
+      category: note.category as NoteCategory,
+      createdAt: new Date(note.created_at),
+      userId: note.user_id
+    }));
+
+    setNotes(formattedNotes);
     toast.success('Note added successfully');
   };
 
@@ -146,6 +166,26 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
       throw error;
     }
 
+    // Explicitly fetch notes after deletion
+    const { data, error: fetchError } = await supabase
+      .from('notes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (fetchError) {
+      console.error('Error fetching notes after delete:', fetchError);
+      return;
+    }
+
+    const formattedNotes: Note[] = data.map(note => ({
+      id: note.id,
+      text: note.content,
+      category: note.category as NoteCategory,
+      createdAt: new Date(note.created_at),
+      userId: note.user_id
+    }));
+
+    setNotes(formattedNotes);
     toast.success('Note deleted successfully');
   };
 
