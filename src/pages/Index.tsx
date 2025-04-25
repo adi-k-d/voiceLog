@@ -16,7 +16,7 @@ enum AppState {
 
 const Index = () => {
   const { notes, addNote } = useNoteContext();
-  const [appState, setAppState] = useState<AppState>(notes.length > 0 ? AppState.LIST : AppState.CATEGORY);
+  const [appState, setAppState] = useState<AppState>(AppState.LIST);
   const [selectedCategory, setSelectedCategory] = useState<NoteCategory | null>(null);
   const [transcription, setTranscription] = useState<string>('');
 
@@ -40,7 +40,7 @@ const Index = () => {
   };
 
   const handleCancel = () => {
-    setAppState(AppState.CATEGORY);
+    setAppState(AppState.LIST);
     setSelectedCategory(null);
     setTranscription('');
   };
@@ -48,7 +48,24 @@ const Index = () => {
   const renderContent = () => {
     switch (appState) {
       case AppState.LIST:
-        return <NoteList notes={notes} onCreateNew={() => setAppState(AppState.CATEGORY)} />;
+        return (
+          <div className="flex flex-col md:flex-row w-full gap-6">
+            <div className="w-full md:w-64">
+              <CategorySelector selectedCategory={selectedCategory} onSelectCategory={handleCategorySelect} />
+              <div className="mt-6 px-4">
+                <Button 
+                  onClick={() => setAppState(AppState.CATEGORY)} 
+                  className="w-full md:w-auto"
+                >
+                  Create New Note
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1">
+              <NoteList notes={notes} onCreateNew={() => setAppState(AppState.CATEGORY)} />
+            </div>
+          </div>
+        );
       case AppState.CATEGORY:
         return <CategorySelector selectedCategory={selectedCategory} onSelectCategory={handleCategorySelect} />;
       case AppState.RECORD:
@@ -82,7 +99,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-6 md:py-8">
+      <main className="container mx-auto px-4 py-6">
         {renderContent()}
       </main>
     </div>
