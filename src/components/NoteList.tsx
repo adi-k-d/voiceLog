@@ -1,12 +1,17 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { NoteCategory } from './CategorySelector';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Pencil, Trash2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useNoteContext } from '@/context/NoteContext';
 
 export interface Note {
   id: string;
   text: string;
   category: NoteCategory;
   createdAt: Date;
+  userId?: string;
 }
 
 interface NoteListProps {
@@ -15,6 +20,9 @@ interface NoteListProps {
 }
 
 const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
+  const { user } = useAuth();
+  const { updateNote, deleteNote } = useNoteContext();
+
   const formatDate = (date: Date): string => {
     return date.toLocaleDateString('en-US', {
       month: 'short',
@@ -25,50 +33,49 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
 
   if (notes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4">
-        <p className="text-gray-500 mb-4 text-center">You don't have any notes yet.</p>
-        <Button onClick={onCreateNew}>Create Your First Note</Button>
+      <div className="text-center p-8 bg-gray-50 rounded-lg">
+        <p className="text-gray-500">No notes yet. Create your first note by selecting a category.</p>
+        <Button 
+          onClick={onCreateNew} 
+          className="mt-4"
+        >
+          Create Note
+        </Button>
       </div>
     );
   }
 
-  return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-8 px-4">
-        <h2 className="text-xl font-semibold">Your Notes</h2>
-        <Button onClick={onCreateNew}>New Note</Button>
-      </div>
+  const isOwner = (noteUserId?: string) => {
+    return user?.id === noteUserId;
+  };
 
-      <div className="space-y-8">
-        {(['Work Update', 'Improvement Idea', 'New Learning'] as NoteCategory[]).map(category => {
-          const categoryNotes = notes.filter(note => note.category === category);
-          
-          if (categoryNotes.length === 0) return null;
-          
-          return (
-            <div key={category} className="space-y-4 px-4">
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-medium">{category}</h3>
-                <span className="text-sm bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">
-                  {categoryNotes.length}
-                </span>
-              </div>
-              
-              <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
-                {categoryNotes.map(note => (
-                  <div key={note.id} className="note-card">
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="category-pill">{note.category}</span>
-                      <span className="text-xs text-gray-500">{formatDate(note.createdAt)}</span>
-                    </div>
-                    <p className="text-gray-800 line-clamp-3">{note.text}</p>
-                  </div>
-                ))}
-              </div>
+  return (
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      {notes.map(note => (
+        <Card key={note.id} className="relative">
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-start">
+              <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                {note.category}
+              </span>
+              <span className="text-xs text-gray-500">{formatDate(note.createdAt)}</span>
             </div>
-          );
-        })}
-      </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-800 whitespace-pre-wrap">{note.text}</p>
+          </CardContent>
+          {isOwner(note.userId) && (
+            <CardFooter className="flex justify-end gap-2 border-t pt-3">
+              <Button size="sm" variant="outline" onClick={() => updateNote(note.id, note.text)}>
+                <Pencil className="h-4 w-4 mr-1" /> Edit
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => deleteNote(note.id)}>
+                <Trash2 className="h-4 w-4 mr-1" /> Delete
+              </Button>
+            </CardFooter>
+          )}
+        </Card>
+      ))}
     </div>
   );
 };

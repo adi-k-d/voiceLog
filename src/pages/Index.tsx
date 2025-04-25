@@ -1,98 +1,74 @@
 import React, { useState } from 'react';
 import Header from '@/components/Header';
-import VoiceRecorder from '@/components/VoiceRecorder';
-import CategorySelector, { NoteCategory } from '@/components/CategorySelector';
-import TranscriptionEditor from '@/components/TranscriptionEditor';
 import NoteList from '@/components/NoteList';
-import { useNoteContext } from '@/context/NoteContext';
 import { Button } from '@/components/ui/button';
-
-enum AppState {
-  LIST,
-  CATEGORY,
-  RECORD,
-  TRANSCRIBE
-}
+import { useNoteContext } from '@/context/NoteContext';
+import CategorySelector, { NoteCategory } from '@/components/CategorySelector';
+import VoiceRecorder from '@/components/VoiceRecorder';
+import TranscriptionEditor from '@/components/TranscriptionEditor';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const Index = () => {
-  const { notes, addNote } = useNoteContext();
-  const [appState, setAppState] = useState<AppState>(AppState.LIST);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<NoteCategory | null>(null);
-  const [transcription, setTranscription] = useState<string>('');
+  const [transcription, setTranscription] = useState('');
+  const { addNote, notes } = useNoteContext();
+  const [step, setStep] = useState<'category' | 'record' | 'transcribe'>('category');
 
   const handleCategorySelect = (category: NoteCategory) => {
     setSelectedCategory(category);
-    setAppState(AppState.RECORD);
+    setStep('record');
   };
 
   const handleRecordingComplete = (_audioBlob: Blob, text: string) => {
     setTranscription(text);
-    setAppState(AppState.TRANSCRIBE);
+    setStep('transcribe');
   };
 
   const handleSaveNote = (text: string) => {
     if (selectedCategory) {
       addNote(text, selectedCategory);
-      setAppState(AppState.LIST);
-      setSelectedCategory(null);
-      setTranscription('');
+      handleClose();
     }
   };
 
-  const handleCancel = () => {
-    setAppState(AppState.LIST);
+  const handleClose = () => {
+    setIsDialogOpen(false);
+    setStep('category');
     setSelectedCategory(null);
     setTranscription('');
   };
 
-  const renderContent = () => {
-    switch (appState) {
-      case AppState.LIST:
-        return (
-          <div className="flex flex-col md:flex-row w-full gap-6">
-            <div className="w-full md:w-64">
-              <CategorySelector selectedCategory={selectedCategory} onSelectCategory={handleCategorySelect} />
-              <div className="mt-6 px-4">
-                <Button 
-                  onClick={() => setAppState(AppState.CATEGORY)} 
-                  className="w-full md:w-auto"
-                >
-                  Create New Note
-                </Button>
-              </div>
-            </div>
-            <div className="flex-1">
-              <NoteList notes={notes} onCreateNew={() => setAppState(AppState.CATEGORY)} />
-            </div>
-          </div>
-        );
-      case AppState.CATEGORY:
+  const handleCreateNew = () => {
+    setIsDialogOpen(true);
+  };
+
+  const renderDialogContent = () => {
+    switch (step) {
+      case 'category':
         return <CategorySelector selectedCategory={selectedCategory} onSelectCategory={handleCategorySelect} />;
-      case AppState.RECORD:
+      case 'record':
         return (
-          <div className="flex flex-col items-center w-full max-w-md mx-auto px-4">
+          <div className="flex flex-col items-center">
             <div className="mb-6 text-center">
-              <span className="category-pill">{selectedCategory}</span>
+              <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                {selectedCategory}
+              </span>
             </div>
             <VoiceRecorder onRecordingComplete={handleRecordingComplete} />
-            <Button 
-              variant="ghost"
-              onClick={handleCancel}
-              className="mt-4 w-full max-w-[200px]"
-            >
-              Cancel
-            </Button>
           </div>
         );
-      case AppState.TRANSCRIBE:
-        return selectedCategory ? (
-          <TranscriptionEditor 
+      case 'transcribe':
+        return (
+          <TranscriptionEditor
             transcription={transcription}
             category={selectedCategory}
             onSave={handleSaveNote}
-            onCancel={handleCancel}
+            onCancel={handleClose}
           />
-        ) : null;
+        );
+      default:
+        return null;
     }
   };
 
@@ -100,7 +76,17 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-6">
-        {renderContent()}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Notes</h1>
+          <Button onClick={() => setIsDialogOpen(true)}>Add New Note</Button>
+        </div>
+        <NoteList notes={notes} onCreateNew={handleCreateNew} />
+
+        <Dialog open={isDialogOpen} onOpenChange={handleClose}>
+          <DialogContent className="sm:max-w-md">
+            {renderDialogContent()}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

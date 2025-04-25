@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { NoteCategory } from '@/components/CategorySelector';
 import { Note } from '@/components/NoteList';
