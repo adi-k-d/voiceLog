@@ -20,14 +20,14 @@ const Index = () => {
     setStep('record');
   };
 
-  const handleRecordingComplete = (_audioBlob: Blob, text: string) => {
+  const handleRecordingComplete = async (_audioBlob: Blob, text: string) => {
     setTranscription(text);
     setStep('transcribe');
   };
 
-  const handleSaveNote = (text: string) => {
+  const handleSaveNote = async (text: string) => {
     if (selectedCategory) {
-      addNote(text, selectedCategory);
+      await addNote(text, selectedCategory);
       handleClose();
     }
   };

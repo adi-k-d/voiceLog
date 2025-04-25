@@ -133,12 +133,15 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
         <div className="flex flex-col items-center gap-4">
           <div className="flex justify-center mb-4">
             {isRecording ? (
-              <div className="waveform-container">
-                <div className="waveform-bar animate-waveform-1"></div>
-                <div className="waveform-bar animate-waveform-2"></div>
-                <div className="waveform-bar animate-waveform-3"></div>
-                <div className="waveform-bar animate-waveform-4"></div>
-                <div className="waveform-bar animate-waveform-5"></div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-1 h-10">
+                  <div className="w-1 h-4 bg-blue-500 rounded-full animate-bounce [animation-delay:0ms]"></div>
+                  <div className="w-1 h-6 bg-blue-500 rounded-full animate-bounce [animation-delay:200ms]"></div>
+                  <div className="w-1 h-8 bg-blue-500 rounded-full animate-bounce [animation-delay:400ms]"></div>
+                  <div className="w-1 h-6 bg-blue-500 rounded-full animate-bounce [animation-delay:600ms]"></div>
+                  <div className="w-1 h-4 bg-blue-500 rounded-full animate-bounce [animation-delay:800ms]"></div>
+                </div>
+                <div className="text-sm text-gray-500">{formatTime(recordingTime)}</div>
               </div>
             ) : audioBlob ? (
               <div className="text-center">
