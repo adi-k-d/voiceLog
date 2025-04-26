@@ -98,23 +98,26 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
   };
 
   const getSupportedMimeType = (): string => {
-    // OpenAI supported formats in preferred order
-    const types = [
+    // List of supported formats in order of preference
+    const supportedFormats = [
+      'audio/m4a',
+      'audio/mp3',
       'audio/webm',
       'audio/mp4',
-      'audio/mp3',
+      'audio/mpga',
       'audio/wav',
-      'audio/ogg'
+      'audio/mpeg'
     ];
     
-    for (const type of types) {
+    for (const type of supportedFormats) {
       if (MediaRecorder.isTypeSupported(type)) {
+        console.log('Using format:', type);
         return type;
       }
     }
     
-    // Fallback to audio/webm
-    return 'audio/webm';
+    // If no supported formats found, throw error
+    throw new Error('No supported audio format found. Please use a modern browser that supports M4A, MP3, WebM, MP4, MPGA, WAV, or MPEG formats.');
   };
 
   const stopRecording = () => {
