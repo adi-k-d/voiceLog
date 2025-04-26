@@ -145,21 +145,18 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
 
   const transcribeAudio = async (blob: Blob): Promise<string> => {
     try {
-      // Clear any previous errors
       setError(null);
       
-      // More efficient base64 conversion
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
+      // Convert blob to base64 using FileReader
+      const base64Audio = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
         reader.onload = () => {
           const base64String = (reader.result as string).split(',')[1];
           resolve(base64String);
         };
         reader.onerror = () => reject(new Error('Failed to read audio file'));
+        reader.readAsDataURL(blob);
       });
-      
-      reader.readAsDataURL(blob);
-      const base64Audio = await base64Promise;
       
       console.log('Sending audio for transcription, size:', blob.size, 'type:', blob.type);
 
