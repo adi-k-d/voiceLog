@@ -148,17 +148,31 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       // Clear any previous errors
       setError(null);
       
-      // Convert blob to base64
-      const buffer = await blob.arrayBuffer();
-      const base64Audio = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      // Process audio in chunks to prevent stack overflow
+      const chunkSize = 1024 * 1024; // 1MB chunks
+      const totalChunks = Math.ceil(blob.size / chunkSize);
+      let base64Audio = '';
       
-      console.log('Sending audio for transcription, size:', buffer.byteLength, 'type:', blob.type);
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, blob.size);
+        const chunk = blob.slice(start, end);
+        const buffer = await chunk.arrayBuffer();
+        base64Audio += btoa(String.fromCharCode(...new Uint8Array(buffer)));
+        
+        // Add a small delay between chunks to prevent UI blocking
+        if (i < totalChunks - 1) {
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
+      }
+      
+      console.log('Sending audio for transcription, size:', blob.size, 'type:', blob.type);
 
       const { data, error } = await supabase.functions.invoke('transcribe', {
         body: { 
           audio: base64Audio,
-          audioType: blob.type,  // Send the audio MIME type
-          recordingTime: recordingTime // Send recording duration
+          audioType: blob.type,
+          recordingTime: recordingTime
         }
       });
 
