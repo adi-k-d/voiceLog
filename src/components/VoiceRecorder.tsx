@@ -58,7 +58,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       console.log('Using MIME type:', mimeType);
       
       mediaRecorderRef.current = new MediaRecorder(stream, { 
-        mimeType: mimeType || undefined // Use undefined if no supported type found
+        mimeType: mimeType
       });
       audioChunksRef.current = [];
 
@@ -92,34 +92,19 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       
     } catch (error) {
       console.error('Error accessing microphone:', error);
-      setError('Microphone access failed. Please check your browser permissions.');
-      toast.error('Error accessing microphone. Please make sure you have granted permission.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
   // Function to get a supported MIME type for current browser
   const getSupportedMimeType = (): string => {
-    // Check if WebM is supported
-    if (MediaRecorder.isTypeSupported('audio/webm')) {
-      return 'audio/webm';
+    // Force WebM or show error
+    if (!MediaRecorder.isTypeSupported('audio/webm')) {
+      throw new Error('WebM audio recording is not supported in this browser. Please use a modern browser that supports WebM.');
     }
-    
-    // Fallback options in order of preference
-    const fallbackTypes = [
-      'audio/mp4',
-      'audio/mp3',
-      'audio/wav',
-      'audio/ogg'
-    ];
-    
-    for (const type of fallbackTypes) {
-      if (MediaRecorder.isTypeSupported(type)) {
-        return type;
-      }
-    }
-    
-    // If no supported types found, use default
-    return '';
+    return 'audio/webm';
   };
 
   const stopRecording = () => {
