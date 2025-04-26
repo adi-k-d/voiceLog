@@ -151,20 +151,36 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       const base64Audio = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
-          const base64String = (reader.result as string).split(',')[1];
+          // Ensure we get the complete base64 string
+          const result = reader.result as string;
+          if (!result) {
+            reject(new Error('Failed to read audio file'));
+            return;
+          }
+          const base64String = result.split(',')[1];
+          if (!base64String) {
+            reject(new Error('Invalid audio data format'));
+            return;
+          }
           resolve(base64String);
         };
         reader.onerror = () => reject(new Error('Failed to read audio file'));
         reader.readAsDataURL(blob);
       });
       
-      console.log('Sending audio for transcription, size:', blob.size, 'type:', blob.type);
+      // Verify the base64 string length
+      if (!base64Audio || base64Audio.length === 0) {
+        throw new Error('Empty audio data received');
+      }
+      
+      console.log('Sending audio for transcription, size:', blob.size, 'type:', blob.type, 'base64 length:', base64Audio.length);
 
       const { data, error } = await supabase.functions.invoke('transcribe', {
         body: { 
           audio: base64Audio,
           audioType: blob.type,
-          recordingTime: recordingTime
+          recordingTime: recordingTime,
+          audioSize: blob.size // Add size for verification
         }
       });
 
