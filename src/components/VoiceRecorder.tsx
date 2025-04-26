@@ -35,9 +35,12 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       }
     };
     
-    // Some mobile devices perform better with specific audio configurations
+    // Force WebM on mobile devices
     if (isMobile) {
-      return { audio: true }; // Simplified options for mobile
+      return { 
+        audio: true,
+        mimeType: 'audio/webm'
+      };
     }
     
     return options;
@@ -50,12 +53,12 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       
       const stream = await navigator.mediaDevices.getUserMedia(getMediaOptions());
       
-      // Use more compatible MIME type
+      // Get supported MIME type
       const mimeType = getSupportedMimeType();
       console.log('Using MIME type:', mimeType);
       
       mediaRecorderRef.current = new MediaRecorder(stream, { 
-        mimeType: mimeType
+        mimeType: mimeType || undefined // Use undefined if no supported type found
       });
       audioChunksRef.current = [];
 
@@ -96,23 +99,27 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
 
   // Function to get a supported MIME type for current browser
   const getSupportedMimeType = (): string => {
-    // OpenAI supported formats in preferred order
-    const types = [
-      'audio/webm',
+    // Check if WebM is supported
+    if (MediaRecorder.isTypeSupported('audio/webm')) {
+      return 'audio/webm';
+    }
+    
+    // Fallback options in order of preference
+    const fallbackTypes = [
       'audio/mp4',
       'audio/mp3',
       'audio/wav',
       'audio/ogg'
     ];
     
-    for (const type of types) {
+    for (const type of fallbackTypes) {
       if (MediaRecorder.isTypeSupported(type)) {
         return type;
       }
     }
     
-    // Fallback to audio/webm
-    return 'audio/webm';
+    // If no supported types found, use default
+    return '';
   };
 
   const stopRecording = () => {
