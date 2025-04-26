@@ -96,12 +96,13 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
 
   // Function to get a supported MIME type for current browser
   const getSupportedMimeType = (): string => {
+    // OpenAI supported formats in preferred order
     const types = [
       'audio/webm',
       'audio/mp4',
-      'audio/ogg',
+      'audio/mp3',
       'audio/wav',
-      'audio/mpeg'
+      'audio/ogg'
     ];
     
     for (const type of types) {
@@ -146,7 +147,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       const buffer = await blob.arrayBuffer();
       const base64Audio = btoa(String.fromCharCode(...new Uint8Array(buffer)));
       
-      console.log('Sending audio for transcription, size:', buffer.byteLength);
+      console.log('Sending audio for transcription, size:', buffer.byteLength, 'type:', blob.type);
 
       const { data, error } = await supabase.functions.invoke('transcribe', {
         body: { 
@@ -267,7 +268,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
             {!isRecording && !audioBlob && (
               <Button 
                 onClick={startRecording} 
-                className="h-16 w-16 rounded-full bg-voicelog-red hover:bg-red-600"
+                className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600"
               >
                 <Mic className="h-8 w-8 text-white" />
               </Button>
@@ -276,7 +277,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
             {isRecording && (
               <Button 
                 onClick={stopRecording} 
-                className="h-16 w-16 rounded-full bg-voicelog-red hover:bg-red-600 animate-pulse-recording"
+                className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 animate-pulse-recording"
               >
                 <Mic className="h-8 w-8 text-white" />
               </Button>
@@ -287,7 +288,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
                 <Button 
                   onClick={playAudio} 
                   disabled={isPlaying}
-                  className="h-14 w-14 rounded-full bg-voicelog-blue hover:bg-blue-500"
+                  className="h-14 w-14 rounded-full bg-blue-500 hover:bg-blue-500"
                 >
                   <Play className="h-6 w-6 text-white" />
                 </Button>
