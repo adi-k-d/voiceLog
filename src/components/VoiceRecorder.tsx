@@ -147,40 +147,66 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
     try {
       setError(null);
       
-      // Convert blob to base64 using FileReader
+      // Convert blob to base64 using a more reliable method for mobile
       const base64Audio = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
+        let chunks: string[] = [];
+        
         reader.onload = () => {
-          // Ensure we get the complete base64 string
           const result = reader.result as string;
           if (!result) {
             reject(new Error('Failed to read audio file'));
             return;
           }
-          const base64String = result.split(',')[1];
-          if (!base64String) {
+          
+          // Get the base64 part after the comma
+          const base64Part = result.split(',')[1];
+          if (!base64Part) {
             reject(new Error('Invalid audio data format'));
             return;
           }
-          resolve(base64String);
+          
+          chunks.push(base64Part);
+          
+          // If this is the last chunk, combine and resolve
+          if (reader.readyState === FileReader.DONE) {
+            const completeBase64 = chunks.join('');
+            if (!completeBase64) {
+              reject(new Error('Empty audio data received'));
+              return;
+            }
+            resolve(completeBase64);
+          }
         };
+        
         reader.onerror = () => reject(new Error('Failed to read audio file'));
-        reader.readAsDataURL(blob);
+        
+        // Read the file in chunks for better mobile support
+        const chunkSize = 1024 * 1024; // 1MB chunks
+        const totalChunks = Math.ceil(blob.size / chunkSize);
+        
+        for (let i = 0; i < totalChunks; i++) {
+          const start = i * chunkSize;
+          const end = Math.min(start + chunkSize, blob.size);
+          const chunk = blob.slice(start, end);
+          reader.readAsDataURL(chunk);
+        }
       });
       
-      // Verify the base64 string length
-      if (!base64Audio || base64Audio.length === 0) {
-        throw new Error('Empty audio data received');
-      }
-      
-      console.log('Sending audio for transcription, size:', blob.size, 'type:', blob.type, 'base64 length:', base64Audio.length);
+      console.log('Sending audio for transcription:', {
+        size: blob.size,
+        type: blob.type,
+        base64Length: base64Audio.length,
+        chunks: Math.ceil(blob.size / (1024 * 1024))
+      });
 
       const { data, error } = await supabase.functions.invoke('transcribe', {
         body: { 
           audio: base64Audio,
           audioType: blob.type,
           recordingTime: recordingTime,
-          audioSize: blob.size // Add size for verification
+          audioSize: blob.size,
+          isComplete: true
         }
       });
 
