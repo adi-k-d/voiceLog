@@ -36,12 +36,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
     };
     
     // Force WebM on mobile devices
-    if (isMobile) {
-      return { 
-        audio: true,
-        mimeType: 'audio/webm'
-      };
-    }
+    
     
     return options;
   };
