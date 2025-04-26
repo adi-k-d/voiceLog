@@ -20,10 +20,40 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const getSupportedMimeType = (): string => {
+    // List of supported formats in order of preference
+    const supportedFormats = [
+      'audio/m4a',
+      'audio/mp3',
+      'audio/webm',
+      'audio/mp4',
+      'audio/mpga',
+      'audio/wav',
+      'audio/mpeg'
+    ];
+
+    // Check each format in order
+    for (const format of supportedFormats) {
+      if (MediaRecorder.isTypeSupported(format)) {
+        console.log('Using format:', format);
+        return format;
+      }
+    }
+
+    // If no supported formats found, throw error
+    throw new Error('No supported audio format found. Please use a modern browser that supports M4A, MP3, WebM, MP4, MPGA, WAV, or MPEG formats.');
+  };
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      
+      // Get supported MIME type
+      const mimeType = getSupportedMimeType();
+      
+      mediaRecorderRef.current = new MediaRecorder(stream, { 
+        mimeType: mimeType
+      });
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
@@ -33,7 +63,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         setAudioBlob(audioBlob);
         
         if (audioRef.current) {
@@ -51,7 +81,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       
     } catch (error) {
       console.error('Error accessing microphone:', error);
-      toast.error('Error accessing microphone. Please make sure you have granted permission.');
+      toast.error(error instanceof Error ? error.message : 'Error accessing microphone. Please make sure you have granted permission.');
     }
   };
 
