@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, Play, Check } from 'lucide-react';
+import { Mic, Play, Check, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface VoiceRecorderProps {
   onRecordingComplete: (audioBlob: Blob, transcription: string) => void;
@@ -14,16 +16,47 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Configure audio for better mobile compatibility
+  const getMediaOptions = () => {
+    const options: MediaStreamConstraints = {
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      }
+    };
+    
+    // Some mobile devices perform better with specific audio configurations
+    if (isMobile) {
+      return { audio: true }; // Simplified options for mobile
+    }
+    
+    return options;
+  };
+
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      // Clear any previous errors
+      setError(null);
+      
+      const stream = await navigator.mediaDevices.getUserMedia(getMediaOptions());
+      
+      // Use more compatible MIME type
+      const mimeType = getSupportedMimeType();
+      console.log('Using MIME type:', mimeType);
+      
+      mediaRecorderRef.current = new MediaRecorder(stream, { 
+        mimeType: mimeType
+      });
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
@@ -33,11 +66,16 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const mimeType = getSupportedMimeType();
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         setAudioBlob(audioBlob);
         
+        // Create URL for audio playback
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        
         if (audioRef.current) {
-          audioRef.current.src = URL.createObjectURL(audioBlob);
+          audioRef.current.src = url;
         }
       };
 
@@ -51,8 +89,29 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       
     } catch (error) {
       console.error('Error accessing microphone:', error);
+      setError('Microphone access failed. Please check your browser permissions.');
       toast.error('Error accessing microphone. Please make sure you have granted permission.');
     }
+  };
+
+  // Function to get a supported MIME type for current browser
+  const getSupportedMimeType = (): string => {
+    const types = [
+      'audio/webm',
+      'audio/mp4',
+      'audio/ogg',
+      'audio/wav',
+      'audio/mpeg'
+    ];
+    
+    for (const type of types) {
+      if (MediaRecorder.isTypeSupported(type)) {
+        return type;
+      }
+    }
+    
+    // Fallback to audio/webm
+    return 'audio/webm';
   };
 
   const stopRecording = () => {
@@ -72,41 +131,80 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
   };
 
   const playAudio = () => {
-    if (audioRef.current && audioBlob) {
+    if (audioRef.current && audioUrl) {
       setIsPlaying(true);
       audioRef.current.play();
     }
   };
 
   const transcribeAudio = async (blob: Blob): Promise<string> => {
-    // Convert blob to base64
-    const buffer = await blob.arrayBuffer();
-    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    try {
+      // Clear any previous errors
+      setError(null);
+      
+      // Convert blob to base64
+      const buffer = await blob.arrayBuffer();
+      const base64Audio = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      
+      console.log('Sending audio for transcription, size:', buffer.byteLength);
 
-    const { data, error } = await supabase.functions.invoke('transcribe', {
-      body: { audio: base64Audio }
-    });
+      const { data, error } = await supabase.functions.invoke('transcribe', {
+        body: { 
+          audio: base64Audio,
+          audioType: blob.type,  // Send the audio MIME type
+          recordingTime: recordingTime // Send recording duration
+        }
+      });
 
-    if (error) {
-      throw new Error(error.message);
+      if (error) {
+        console.error('Transcription error from API:', error);
+        throw new Error(`Transcription failed: ${error.message}`);
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      if (!data || !data.text) {
+        throw new Error('No transcription returned from the service');
+      }
+
+      return data.text;
+    } catch (error) {
+      console.error('Transcription process error:', error);
+      throw error;
     }
-
-    return data.text;
   };
 
   const confirmRecording = async () => {
-    if (audioBlob) {
-      setIsProcessing(true);
-      try {
-        const transcription = await transcribeAudio(audioBlob);
-        onRecordingComplete(audioBlob, transcription);
-        toast.success('Recording transcribed successfully');
-      } catch (error) {
-        console.error('Transcription error:', error);
-        toast.error('Error transcribing audio. Please try again.');
-      } finally {
+    if (!audioBlob) {
+      toast.error('No recording found. Please record audio first.');
+      return;
+    }
+    
+    setIsProcessing(true);
+    setError(null);
+    
+    try {
+      toast.info('Transcribing your recording...');
+      const transcription = await transcribeAudio(audioBlob);
+      
+      if (transcription.trim() === '') {
+        setError('No speech detected. Please try speaking more clearly and ensure there is no background noise.');
+        toast.warning('No speech detected. Please try speaking more clearly.');
         setIsProcessing(false);
+        return;
       }
+      
+      onRecordingComplete(audioBlob, transcription);
+      toast.success('Recording transcribed successfully');
+    } catch (error) {
+      console.error('Transcription error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setError(`Transcription failed: ${errorMessage}`);
+      toast.error(`Error transcribing audio: ${errorMessage}`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -117,6 +215,11 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+      
+      // Clean up audio URLs to prevent memory leaks
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
       }
     };
   }, []);
@@ -133,15 +236,12 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
         <div className="flex flex-col items-center gap-4">
           <div className="flex justify-center mb-4">
             {isRecording ? (
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex items-center gap-1 h-10">
-                  <div className="w-1 h-4 bg-blue-500 rounded-full animate-bounce [animation-delay:0ms]"></div>
-                  <div className="w-1 h-6 bg-blue-500 rounded-full animate-bounce [animation-delay:200ms]"></div>
-                  <div className="w-1 h-8 bg-blue-500 rounded-full animate-bounce [animation-delay:400ms]"></div>
-                  <div className="w-1 h-6 bg-blue-500 rounded-full animate-bounce [animation-delay:600ms]"></div>
-                  <div className="w-1 h-4 bg-blue-500 rounded-full animate-bounce [animation-delay:800ms]"></div>
-                </div>
-                <div className="text-sm text-gray-500">{formatTime(recordingTime)}</div>
+              <div className="waveform-container">
+                <div className="waveform-bar animate-waveform-1"></div>
+                <div className="waveform-bar animate-waveform-2"></div>
+                <div className="waveform-bar animate-waveform-3"></div>
+                <div className="waveform-bar animate-waveform-4"></div>
+                <div className="waveform-bar animate-waveform-5"></div>
               </div>
             ) : audioBlob ? (
               <div className="text-center">
@@ -156,11 +256,18 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
             )}
           </div>
           
+          {error && (
+            <Alert variant="destructive" className="mb-3 mt-1">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="ml-2">{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <div className="flex gap-4">
             {!isRecording && !audioBlob && (
               <Button 
                 onClick={startRecording} 
-                className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600"
+                className="h-16 w-16 rounded-full bg-voicelog-red hover:bg-red-600"
               >
                 <Mic className="h-8 w-8 text-white" />
               </Button>
@@ -169,7 +276,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
             {isRecording && (
               <Button 
                 onClick={stopRecording} 
-                className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 animate-pulse-recording"
+                className="h-16 w-16 rounded-full bg-voicelog-red hover:bg-red-600 animate-pulse-recording"
               >
                 <Mic className="h-8 w-8 text-white" />
               </Button>
@@ -180,7 +287,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
                 <Button 
                   onClick={playAudio} 
                   disabled={isPlaying}
-                  className="h-14 w-14 rounded-full bg-blue-500 hover:bg-blue-500"
+                  className="h-14 w-14 rounded-full bg-voicelog-blue hover:bg-blue-500"
                 >
                   <Play className="h-6 w-6 text-white" />
                 </Button>
@@ -190,7 +297,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
                   disabled={isProcessing} 
                   className="h-14 w-14 rounded-full bg-green-500 hover:bg-green-600"
                 >
-                  <Check className="h-6 w-6 text-white" />
+                  {isProcessing ? <Loader2 className="h-6 w-6 text-white animate-spin" /> : <Check className="h-6 w-6 text-white" />}
                 </Button>
               </>
             )}
@@ -199,6 +306,12 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
           {isProcessing && (
             <div className="text-sm text-gray-500 mt-2">
               Processing recording...
+            </div>
+          )}
+          
+          {!isProcessing && audioBlob && recordingTime < 1 && !error && (
+            <div className="text-sm text-amber-500 mt-2">
+              Warning: Recording was very short. Transcription may not work properly.
             </div>
           )}
         </div>
