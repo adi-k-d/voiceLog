@@ -148,23 +148,18 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onRecordingComplete }) =>
       // Clear any previous errors
       setError(null);
       
-      // Process audio in chunks to prevent stack overflow
-      const chunkSize = 1024 * 1024; // 1MB chunks
-      const totalChunks = Math.ceil(blob.size / chunkSize);
-      let base64Audio = '';
+      // More efficient base64 conversion
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const base64String = (reader.result as string).split(',')[1];
+          resolve(base64String);
+        };
+        reader.onerror = () => reject(new Error('Failed to read audio file'));
+      });
       
-      for (let i = 0; i < totalChunks; i++) {
-        const start = i * chunkSize;
-        const end = Math.min(start + chunkSize, blob.size);
-        const chunk = blob.slice(start, end);
-        const buffer = await chunk.arrayBuffer();
-        base64Audio += btoa(String.fromCharCode(...new Uint8Array(buffer)));
-        
-        // Add a small delay between chunks to prevent UI blocking
-        if (i < totalChunks - 1) {
-          await new Promise(resolve => setTimeout(resolve, 0));
-        }
-      }
+      reader.readAsDataURL(blob);
+      const base64Audio = await base64Promise;
       
       console.log('Sending audio for transcription, size:', blob.size, 'type:', blob.type);
 
