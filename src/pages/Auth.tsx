@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { FcGoogle } from 'react-icons/fc'; // Google Icon
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -50,6 +51,21 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      if (error) throw error;
+      // Supabase will handle redirection if configured
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -86,6 +102,25 @@ const Auth = () => {
               {isLoading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
             </Button>
           </form>
+
+          {/* Divider */}
+          <div className="flex items-center my-4">
+            <div className="flex-grow h-px bg-muted"></div>
+            <span className="px-3 text-muted-foreground text-sm">or</span>
+            <div className="flex-grow h-px bg-muted"></div>
+          </div>
+
+          {/* Google Sign-In */}
+          <Button
+            variant="outline"
+            className="w-full flex items-center justify-center gap-2"
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+          >
+            <FcGoogle className="h-5 w-5" />
+            Continue with Google
+          </Button>
+
           <div className="mt-4 text-center">
             <Button
               variant="link"
