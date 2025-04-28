@@ -56,9 +56,12 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: 'https://voice-log-z5xu.vercel.app/',
+        },
       });
       if (error) throw error;
-      // Supabase will handle redirection if configured
+      // Supabase will redirect automatically
     } catch (error: any) {
       toast.error(error.message);
     } finally {
