@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 
-export type NoteCategory = 'Work Update' | 'Improvement Idea' | 'New Learning';
+export type NoteCategory = 'Work Update' | 'Improvement Idea' | 'New Learning'| 'Customer Support';
 
 interface CategorySelectorProps {
   selectedCategory: NoteCategory | null;
@@ -10,7 +10,7 @@ interface CategorySelectorProps {
 }
 
 const CategorySelector: React.FC<CategorySelectorProps> = ({ selectedCategory, onSelectCategory }) => {
-  const categories: NoteCategory[] = ['Work Update', 'Improvement Idea', 'New Learning'];
+  const categories: NoteCategory[] = ['Work Update', 'Improvement Idea', 'New Learning' , 'Customer Support'];
   
   return (
     <div className="w-full max-w-md mx-auto px-4">

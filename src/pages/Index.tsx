@@ -1,4 +1,4 @@
-import  { useState } from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import NoteList from '@/components/NoteList';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ const Index = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<NoteCategory | null>(null);
   const [transcription, setTranscription] = useState('');
-  const { addNote, notes } = useNoteContext();
+  const { addNote, notes, loading } = useNoteContext();
   const [step, setStep] = useState<'category' | 'record' | 'transcribe'>('category');
 
   const handleCategorySelect = (category: NoteCategory) => {
@@ -25,9 +25,9 @@ const Index = () => {
     setStep('transcribe');
   };
 
-  const handleSaveNote = async (text: string) => {
+  const handleSaveNote = async (text: string, workUpdate?: string) => {
     if (selectedCategory) {
-      await addNote(text, selectedCategory);
+      await addNote(text, selectedCategory, workUpdate);
       handleClose();
     }
   };
