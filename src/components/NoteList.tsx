@@ -15,6 +15,8 @@ export interface Note {
   createdAt: Date;
   userId?: string;
   workUpdate?: string;
+  useremail?: string;
+  status?: 'Not Started' | 'In Progress' | 'Completed';
 }
 
 interface NoteListProps {
@@ -79,31 +81,59 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
           <Card key={note.id} className="relative">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
-                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                  {note.category}
-                </span>
+                <div className="flex flex-col gap-1">
+                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    {note.category}
+                  </span>
+                  
+                </div>
                 <span className="text-xs text-gray-500">{formatDate(note.createdAt)}</span>
+              </div>
+              <div className="flex justify-between items-start">
+                <div className="flex flex-col gap-1">
+                  
+                  {note.useremail && (
+                    <span className="text-xs text-gray-500">User: {note.useremail}</span>
+                  )}
+                </div>
+                
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-gray-800 whitespace-pre-wrap">{note.text}</p>
-              {note.category === 'Customer Support' && note.workUpdate !== undefined && (
+              {note.category === 'Customer Complaints' && (
                 <div className="border-t pt-3">
-                  <p className="text-sm font-medium text-gray-600 mb-1">Work Update:</p>
-                  <p className="text-gray-700 text-sm whitespace-pre-wrap">
-                    {note.workUpdate || 'No updates yet'}
-                  </p>
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-sm font-medium text-gray-600">Status:</p>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      note.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                      note.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {note.status || 'Not Started'}
+                    </span>
+                  </div>
+                  {note.workUpdate && (
+                    <>
+                      <p className="text-sm font-medium text-gray-600 mb-1">Work Update:</p>
+                      <p className="text-gray-700 text-sm whitespace-pre-wrap">
+                        {note.workUpdate}
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
             </CardContent>
-            {isOwner(note.userId) && (
+            {(isOwner(note.userId) || note.category === 'Customer Complaints') && (
               <CardFooter className="flex justify-end gap-2 border-t pt-3">
                 <Button size="sm" variant="outline" onClick={() => handleEditClick(note)}>
                   <Pencil className="h-4 w-4 mr-1" /> Edit
                 </Button>
-                <Button size="sm" variant="destructive" onClick={() => deleteNote(note.id)}>
-                  <Trash2 className="h-4 w-4 mr-1" /> Delete
-                </Button>
+                {isOwner(note.userId) && (
+                  <Button size="sm" variant="destructive" onClick={() => deleteNote(note.id)}>
+                    <Trash2 className="h-4 w-4 mr-1" /> Delete
+                  </Button>
+                )}
               </CardFooter>
             )}
           </Card>

@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 
-export type NoteCategory = 'Work Update' | 'Improvement Idea' | 'New Learning'| 'Customer Support';
+export type NoteCategory = 'Work Update' | 'Improvement Idea' | 'New Learning' | 'Customer Complaints';
 
 interface CategorySelectorProps {
   selectedCategory: NoteCategory | null;
@@ -10,7 +9,7 @@ interface CategorySelectorProps {
 }
 
 const CategorySelector: React.FC<CategorySelectorProps> = ({ selectedCategory, onSelectCategory }) => {
-  const categories: NoteCategory[] = ['Work Update', 'Improvement Idea', 'New Learning' , 'Customer Support'];
+  const categories: NoteCategory[] = ['Work Update', 'Improvement Idea', 'New Learning', 'Customer Complaints'];
   
   return (
     <div className="w-full max-w-md mx-auto px-4">

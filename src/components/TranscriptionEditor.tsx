@@ -3,11 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { NoteCategory } from './CategorySelector';
 import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TranscriptionEditorProps {
   transcription: string;
   category: NoteCategory;
-  onSave: (text: string, workUpdate?: string) => void;
+  onSave: (text: string, workUpdate?: string, status?: string) => void;
   onCancel: () => void;
 }
 
@@ -18,7 +19,8 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
   onCancel
 }) => {
   const [text, setText] = useState(transcription);
-  const [workUpdate, setWorkUpdate] = useState('Uninitialized');
+  const [workUpdate, setWorkUpdate] = useState('NA');
+  const [status, setStatus] = useState('Not Started');
 
   const handleSave = () => {
     if (text.trim() === '') {
@@ -26,8 +28,8 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
       return;
     }
     
-    if (category === 'Customer Support') {
-      onSave(text, workUpdate);
+    if (category === 'Customer Complaints') {
+      onSave(text, workUpdate, status);
     } else {
       onSave(text);
     }
@@ -55,31 +57,39 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
             />
           </div>
 
-          {category === 'Customer Support' && (
-            <div>
-              <label className="block text-sm font-medium mb-2">Work Update</label>
-              <Textarea
-                className="min-h-[100px] text-base resize-none"
-                placeholder="Enter work update details..."
-                value={workUpdate}
-                onChange={(e) => setWorkUpdate(e.target.value)}
-              />
-            </div>
+          {category === 'Customer Complaints' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-2">Status</label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Not Started">Not Started</SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Work Update</label>
+                <Textarea
+                  className="min-h-[100px] text-base resize-none"
+                  placeholder="Enter work update details..."
+                  value={workUpdate}
+                  onChange={(e) => setWorkUpdate(e.target.value)}
+                />
+              </div>
+            </>
           )}
           
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Button 
-              variant="outline" 
-              onClick={onCancel}
-              className="w-full sm:w-auto order-2 sm:order-1"
-            >
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleSave}
-              className="w-full sm:w-auto order-1 sm:order-2"
-            >
-              Save Note
+            <Button onClick={handleSave}>
+              Save
             </Button>
           </div>
         </div>
