@@ -165,8 +165,9 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
       updateData.work_update = workUpdate;
     }
 
+    // Always update status if provided, even if it's an empty string
     if (status !== undefined) {
-      updateData.status = status;
+      updateData.status = status || 'Not Started';
     }
 
     const { error } = await supabase

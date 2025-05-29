@@ -79,7 +79,16 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {notes.map(note => (
           <Card key={note.id} className="relative">
-            <CardHeader className="pb-3">
+            <CardHeader className="">
+              
+            <span className={`text-xs px-2 py-1 rounded-full w-fit inline-block ${
+              note.status === 'Completed' ? 'bg-green-100 text-green-700' :
+              note.status === 'In Progress' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-red-100 text-red-700'
+            }`}>
+              {note.status || 'Not Started'}
+            </span>
+
               <div className="flex justify-between items-start">
                 <div className="flex flex-col gap-1">
                   <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
@@ -93,9 +102,12 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
                 <div className="flex flex-col gap-1">
                   
                   {note.useremail && (
-                    <span className="text-xs text-gray-500">User: {note.useremail}</span>
+                    <span className="text-xs text-gray-500">{note.useremail}</span>
+                    
                   )}
+                  
                 </div>
+                
                 
               </div>
             </CardHeader>
@@ -104,14 +116,7 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
               {note.category === 'Customer Complaints' && (
                 <div className="border-t pt-3">
                   <div className="flex justify-between items-center mb-2">
-                    <p className="text-sm font-medium text-gray-600">Status:</p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      note.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                      note.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {note.status || 'Not Started'}
-                    </span>
+                    
                   </div>
                   {note.workUpdate && (
                     <>
