@@ -16,7 +16,7 @@ export interface Note {
   userId?: string;
   workUpdate?: string;
   useremail?: string;
-  status?: 'Not Started' | 'In Progress' | 'Completed';
+  status?: string;
 }
 
 interface NoteListProps {

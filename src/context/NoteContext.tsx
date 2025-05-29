@@ -59,7 +59,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
 
       
 
-      const formattedNotes: Note[] = data.map((note, index) => {
+      const formattedNotes: Note[] = data.map((note) => {
        
         // Ensure we have a valid date
         let createdAt = new Date();
@@ -85,6 +85,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
           workUpdate: note.work_update || '',
           useremail: note.useremail || '',
           status: note.status || 'Not Started'
+
         };
 
        
@@ -107,7 +108,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
           schema: 'public', 
           table: 'notes'
         },
-        (payload) => {
+        () => {
          
           fetchNotes(); // Refresh notes when changes occur
         }
