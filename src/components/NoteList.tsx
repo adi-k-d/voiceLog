@@ -45,7 +45,7 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
 
   const handleSaveEdit = async (text: string, workUpdate?: string) => {
     if (editingNote) {
-      await updateNote(editingNote.id, text, workUpdate);
+      await updateNote(editingNote.id, text, workUpdate, 'In Progress');
       setIsEditorOpen(false);
       setEditingNote(null);
     }
@@ -54,6 +54,10 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
   const handleCloseEditor = () => {
     setIsEditorOpen(false);
     setEditingNote(null);
+  };
+
+  const handleCloseIssue = async (note: Note) => {
+    await updateNote(note.id, note.text, note.workUpdate, 'Completed');
   };
 
   if (notes.length === 0) {
@@ -86,7 +90,7 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
               note.status === 'In Progress' ? 'bg-yellow-100 text-yellow-700' :
               'bg-red-100 text-red-700'
             }`}>
-              {note.status || 'Not Started'}
+              {note.status}
             </span>
 
               <div className="flex justify-between items-start">
@@ -131,9 +135,15 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
             </CardContent>
             {(isOwner(note.userId) || note.category === 'Customer Complaints') && (
               <CardFooter className="flex justify-end gap-2 border-t pt-3">
+                
                 <Button size="sm" variant="outline" onClick={() => handleEditClick(note)}>
-                  <Pencil className="h-4 w-4 mr-1" /> Edit
+                  <Pencil className="h-4 w-4 mr-1" /> Add Update
                 </Button>
+                {note.category === 'Customer Complaints' && note.status !== 'Completed' && (
+                  <Button size="sm" variant="default" className="bg-green-600 hover:bg-green-700" onClick={() => handleCloseIssue(note)}>
+                    Close Issue
+                  </Button>
+                )}
                 {isOwner(note.userId) && (
                   <Button size="sm" variant="destructive" onClick={() => deleteNote(note.id)}>
                     <Trash2 className="h-4 w-4 mr-1" /> Delete
@@ -153,6 +163,8 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
               category={editingNote.category}
               onSave={handleSaveEdit}
               onCancel={handleCloseEditor}
+              workUpdate={editingNote.workUpdate}
+              status={editingNote.status}
             />
           )}
         </DialogContent>

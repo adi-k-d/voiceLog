@@ -10,17 +10,30 @@ interface TranscriptionEditorProps {
   category: NoteCategory;
   onSave: (text: string, workUpdate?: string, status?: string) => void;
   onCancel: () => void;
+  workUpdate?: string;
+  status?: string;
 }
 
 const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({ 
   transcription, 
   category,
   onSave,
-  onCancel
+  onCancel,
+  workUpdate: initialWorkUpdate,
+  status: initialStatus
 }) => {
   const [text, setText] = useState(transcription);
-  const [workUpdate, setWorkUpdate] = useState('NA');
-  const [status, setStatus] = useState('Not Started');
+  const [workUpdate, setWorkUpdate] = useState(initialWorkUpdate || '');
+  const [status, setStatus] = useState(initialStatus || 'Not Started');
+
+  const handleWorkUpdateChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newWorkUpdate = e.target.value;
+    setWorkUpdate(newWorkUpdate);
+    // If there's any work update content, set status to In Progress
+    if (newWorkUpdate.trim()) {
+      setStatus('In Progress');
+    }
+  };
 
   const handleSave = () => {
     if (text.trim() === '') {
@@ -78,7 +91,7 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
                   className="min-h-[100px] text-base resize-none"
                   placeholder="Enter work update details..."
                   value={workUpdate}
-                  onChange={(e) => setWorkUpdate(e.target.value)}
+                  onChange={handleWorkUpdateChange}
                 />
               </div>
             </>

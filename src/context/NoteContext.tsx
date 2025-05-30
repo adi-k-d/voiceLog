@@ -167,7 +167,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
 
     // Always update status if provided, even if it's an empty string
     if (status !== undefined) {
-      updateData.status = status || 'Not Started';
+      updateData.status = status ;
     }
 
     const { error } = await supabase
