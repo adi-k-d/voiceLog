@@ -7,6 +7,11 @@ import { NoteProvider } from "@/context/NoteContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import MyNotes from "./pages/MyNotes";
+import WorkUpdate from "./pages/WorkUpdate";
+import ImprovementIdea from "./pages/ImprovementIdea";
+import NewLearning from "./pages/NewLearning";
+import CustomerComplaints from "./pages/CustomerComplaints";
 import { useAuth } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
@@ -38,6 +43,31 @@ const App = () => (
             <Route path="/" element={
               <ProtectedRoute>
                 <Index />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-notes" element={
+              <ProtectedRoute>
+                <MyNotes />
+              </ProtectedRoute>
+            } />
+            <Route path="/work-update" element={
+              <ProtectedRoute>
+                <WorkUpdate />
+              </ProtectedRoute>
+            } />
+            <Route path="/improvement-idea" element={
+              <ProtectedRoute>
+                <ImprovementIdea />
+              </ProtectedRoute>
+            } />
+            <Route path="/new-learning" element={
+              <ProtectedRoute>
+                <NewLearning />
+              </ProtectedRoute>
+            } />
+            <Route path="/customer-complaints" element={
+              <ProtectedRoute>
+                <CustomerComplaints />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />

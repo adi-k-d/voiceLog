@@ -17,6 +17,7 @@ export interface Note {
   workUpdate?: string;
   useremail?: string;
   status?: string;
+  assignedTo?: string;
 }
 
 interface NoteListProps {
