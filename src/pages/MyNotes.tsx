@@ -5,7 +5,6 @@ import { useNoteContext } from '@/context/NoteContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useUsers } from '@/hooks/useUsers';
 import TranscriptionEditor from '@/components/TranscriptionEditor';
-import { WorkUpdate } from '@/components/NoteList';
 
 const truncate = (text: string, maxLength: number) => {
   if (text.length <= maxLength) return text;

@@ -14,16 +14,17 @@ export function useUsers() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // Get all users from the user_directory table
+        // Get all users from the profiles table
         const { data, error } = await supabase
-          .from('user_directory')
+          .from('profiles')
           .select('id, email, username');
 
         if (error) throw error;
 
         // Convert null to undefined for username to match the User interface
         const formattedUsers = (data || []).map(user => ({
-          ...user,
+          id: user.id,
+          email: user.email,
           username: user.username || undefined
         }));
 

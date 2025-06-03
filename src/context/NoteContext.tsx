@@ -74,7 +74,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
         let workUpdates: WorkUpdate[] = [];
         if (note.work_updates) {
           try {
-            workUpdates = JSON.parse(note.work_updates);
+            workUpdates = JSON.parse(note.work_updates as string);
           } catch (e) {
             console.warn(`Failed to parse work updates for note ${note.id}`);
           }
@@ -89,8 +89,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
           workUpdates: workUpdates,
           useremail: note.useremail || '',
           status: note.status || 'Not Started',
-          assignedTo: note.assigned_to || '',
-          assignedBy: note.assigned_by || ''
+          assignedTo: note.assigned_to || ''
         };
 
         return formattedNote;
@@ -242,7 +241,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
     let workUpdates: WorkUpdate[] = [];
     if (data.work_updates) {
       try {
-        workUpdates = JSON.parse(data.work_updates);
+        workUpdates = JSON.parse(data.work_updates as string);
       } catch (e) {
         console.warn(`Failed to parse work updates for note ${data.id}`);
       }
@@ -257,8 +256,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
       workUpdates: workUpdates,
       useremail: data.useremail || '',
       status: data.status || 'Not Started',
-      assignedTo: data.assigned_to || '',
-      assignedBy: data.assigned_by || ''
+      assignedTo: data.assigned_to || ''
     };
   };
 

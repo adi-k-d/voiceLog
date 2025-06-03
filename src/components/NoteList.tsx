@@ -4,7 +4,7 @@ import { NoteCategory } from './CategorySelector';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+
 import { useNoteContext } from '@/context/NoteContext';
 import TranscriptionEditor from './TranscriptionEditor';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -35,7 +35,7 @@ interface NoteListProps {
 
 const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  
   const { updateNote, deleteNote } = useNoteContext();
   const { users, loading: usersLoading } = useUsers();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -80,9 +80,7 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
     );
   }
 
-  const isOwner = (noteUserId?: string) => {
-    return user?.id === noteUserId;
-  };
+ 
 
   return (
     <>
