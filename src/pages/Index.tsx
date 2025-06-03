@@ -9,6 +9,8 @@ import VoiceRecorder from '@/components/VoiceRecorder';
 import TranscriptionEditor from '@/components/TranscriptionEditor';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Mic, FileText, Users, Settings, BarChart } from 'lucide-react';
+import { useUsers } from '@/hooks/useUsers';
+import { WorkUpdate } from '@/components/NoteList';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<NoteCategory | null>(null);
   const [transcription, setTranscription] = useState('');
   const { addNote, notes } = useNoteContext();
+  const { users, loading: usersLoading } = useUsers();
   const [step, setStep] = useState<'category' | 'record' | 'transcribe'>('category');
 
   const handleCategorySelect = (category: NoteCategory) => {
@@ -28,9 +31,9 @@ const Index = () => {
     setStep('transcribe');
   };
 
-  const handleSaveNote = async (text: string, workUpdate?: string) => {
+  const handleSaveNote = async (text: string, workUpdates?: WorkUpdate[], status?: string, assignedTo?: string) => {
     if (selectedCategory) {
-      await addNote(text, selectedCategory, workUpdate);
+      await addNote(text, selectedCategory, workUpdates, status, assignedTo);
       handleClose();
     }
   };
@@ -64,6 +67,8 @@ const Index = () => {
             category={selectedCategory}
             onSave={handleSaveNote}
             onCancel={handleClose}
+            users={users}
+            usersLoading={usersLoading}
           />
         ) : null;
       default:

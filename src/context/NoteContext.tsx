@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { NoteCategory } from '@/components/CategorySelector';
-import { Note } from '@/components/NoteList';
+import { Note, WorkUpdate } from '@/components/NoteList';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -8,9 +8,10 @@ import { toast } from 'sonner';
 interface NoteContextProps {
   notes: Note[];
   loading: boolean;
-  addNote: (text: string, category: NoteCategory, workUpdate?: string, status?: string) => Promise<void>;
-  updateNote: (id: string, text: string, workUpdate?: string, status?: string) => Promise<void>;
+  addNote: (text: string, category: NoteCategory, workUpdates?: WorkUpdate[], status?: string, assignedTo?: string) => Promise<void>;
+  updateNote: (id: string, text: string, workUpdates?: WorkUpdate[], status?: string, assignedTo?: string) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
+  getNote: (id: string) => Promise<Note>;
 }
 
 const NoteContext = createContext<NoteContextProps | undefined>(undefined);
@@ -35,14 +36,12 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
   // Fetch all notes from Supabase
   useEffect(() => {
     if (!user) {
-    
       setNotes([]);
       setLoading(false);
       return;
     }
 
     const fetchNotes = async () => {
-     
       setLoading(true);
       
       const { data, error } = await supabase
@@ -57,16 +56,11 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
         return;
       }
 
-      
-
       const formattedNotes: Note[] = data.map((note) => {
-       
         // Ensure we have a valid date
         let createdAt = new Date();
         if (note.created_at) {
-          
           const parsedDate = new Date(note.created_at);
-          
           if (!isNaN(parsedDate.getTime())) {
             createdAt = parsedDate;
           } else {
@@ -76,23 +70,32 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
           console.warn(`No created_at value for note ${note.id}`);
         }
 
+        // Parse work updates from JSON string if it exists
+        let workUpdates: WorkUpdate[] = [];
+        if (note.work_updates) {
+          try {
+            workUpdates = JSON.parse(note.work_updates);
+          } catch (e) {
+            console.warn(`Failed to parse work updates for note ${note.id}`);
+          }
+        }
+
         const formattedNote: Note = {
           id: note.id,
           text: note.content || '',
           category: note.category as NoteCategory,
           createdAt: createdAt,
           userId: note.user_id,
-          workUpdate: note.work_update || '',
+          workUpdates: workUpdates,
           useremail: note.useremail || '',
-          status: note.status || 'Not Started'
-
+          status: note.status || 'Not Started',
+          assignedTo: note.assigned_to || '',
+          assignedBy: note.assigned_by || ''
         };
 
-       
         return formattedNote;
       });
 
-      
       setNotes(formattedNotes);
       setLoading(false);
     };
@@ -109,7 +112,6 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
           table: 'notes'
         },
         () => {
-         
           fetchNotes(); // Refresh notes when changes occur
         }
       )
@@ -120,21 +122,23 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
     };
   }, [user]);
 
-  const addNote = async (text: string, category: NoteCategory, workUpdate?: string, status?: string) => {
+  const addNote = async (text: string, category: NoteCategory, workUpdates?: WorkUpdate[], status?: string, assignedTo?: string) => {
     if (!user) {
       toast.error('You must be logged in to add notes');
       return;
     }
 
-    console.log('Adding note:', { text, category, workUpdate, status, userId: user.id });
+    console.log('Adding note:', { text, category, workUpdates, status, userId: user.id, assignedTo });
 
     const noteData: any = {
       content: text,
       category,
       user_id: user.id,
-      work_update: workUpdate || '',
+      work_updates: workUpdates ? JSON.stringify(workUpdates) : '[]',
       useremail: user.email,
-      status: category === 'Customer Complaints' ? (status || 'Not Started') : null
+      status: category === 'Customer Complaints' ? (status || 'Not Started') : null,
+      assigned_to: assignedTo || null,
+      assigned_by: user.email
     };
 
     const { error } = await supabase
@@ -150,7 +154,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
     toast.success('Note added successfully');
   };
 
-  const updateNote = async (id: string, text: string, workUpdate?: string, status?: string) => {
+  const updateNote = async (id: string, text: string, workUpdates?: WorkUpdate[], status?: string, assignedTo?: string) => {
     if (!user) {
       toast.error('You must be logged in to update notes');
       return;
@@ -161,13 +165,16 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
       updated_at: new Date().toISOString()
     };
 
-    if (workUpdate !== undefined) {
-      updateData.work_update = workUpdate;
+    if (workUpdates !== undefined) {
+      updateData.work_updates = JSON.stringify(workUpdates);
     }
 
-    // Always update status if provided, even if it's an empty string
     if (status !== undefined) {
-      updateData.status = status ;
+      updateData.status = status;
+    }
+
+    if (assignedTo !== undefined) {
+      updateData.assigned_to = assignedTo;
     }
 
     const { error } = await supabase
@@ -206,8 +213,57 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
     toast.success('Note deleted successfully');
   };
 
+  const getNote = async (id: string): Promise<Note> => {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching note:', error);
+      toast.error('Failed to load note');
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error('Note not found');
+    }
+
+    let createdAt = new Date();
+    if (data.created_at) {
+      const parsedDate = new Date(data.created_at);
+      if (!isNaN(parsedDate.getTime())) {
+        createdAt = parsedDate;
+      }
+    }
+
+    // Parse work updates from JSON string if it exists
+    let workUpdates: WorkUpdate[] = [];
+    if (data.work_updates) {
+      try {
+        workUpdates = JSON.parse(data.work_updates);
+      } catch (e) {
+        console.warn(`Failed to parse work updates for note ${data.id}`);
+      }
+    }
+
+    return {
+      id: data.id,
+      text: data.content || '',
+      category: data.category as NoteCategory,
+      createdAt: createdAt,
+      userId: data.user_id,
+      workUpdates: workUpdates,
+      useremail: data.useremail || '',
+      status: data.status || 'Not Started',
+      assignedTo: data.assigned_to || '',
+      assignedBy: data.assigned_by || ''
+    };
+  };
+
   return (
-    <NoteContext.Provider value={{ notes, loading, addNote, updateNote, deleteNote }}>
+    <NoteContext.Provider value={{ notes, loading, addNote, updateNote, deleteNote, getNote }}>
       {children}
     </NoteContext.Provider>
   );

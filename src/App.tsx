@@ -1,4 +1,3 @@
-
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -12,6 +11,7 @@ import WorkUpdate from "./pages/WorkUpdate";
 import ImprovementIdea from "./pages/ImprovementIdea";
 import NewLearning from "./pages/NewLearning";
 import CustomerComplaints from "./pages/CustomerComplaints";
+import NoteDetail from "./pages/NoteDetail";
 import { useAuth } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
@@ -68,6 +68,11 @@ const App = () => (
             <Route path="/customer-complaints" element={
               <ProtectedRoute>
                 <CustomerComplaints />
+              </ProtectedRoute>
+            } />
+            <Route path="/notes/:id" element={
+              <ProtectedRoute>
+                <NoteDetail />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />

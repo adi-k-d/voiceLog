@@ -91,9 +91,11 @@ export type Database = {
           id: string
           updated_at: string
           user_id: string
-          work_update: string | null
+          work_updates: Json | null
           useremail: string | null
           status: string | null
+          assigned_to: string | null
+          assigned_by: string | null
         }
         Insert: {
           category?: string
@@ -102,9 +104,11 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id: string
-          work_update?: string | null
+          work_updates?: Json | null
           useremail?: string | null
           status?: string | null
+          assigned_to?: string | null
+          assigned_by?: string | null
         }
         Update: {
           category?: string
@@ -113,9 +117,11 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
-          work_update?: string | null
+          work_updates?: Json | null
           useremail?: string | null
           status?: string | null
+          assigned_to?: string | null
+          assigned_by?: string | null
         }
         Relationships: []
       }
@@ -126,6 +132,7 @@ export type Database = {
           id: string
           updated_at: string
           username: string | null
+          email: string
         }
         Insert: {
           avatar_url?: string | null
@@ -133,6 +140,7 @@ export type Database = {
           id: string
           updated_at?: string
           username?: string | null
+          email: string
         }
         Update: {
           avatar_url?: string | null
@@ -140,15 +148,55 @@ export type Database = {
           id?: string
           updated_at?: string
           username?: string | null
+          email?: string
         }
         Relationships: []
+      }
+      user_info: {
+        Row: {
+          id: string
+          email: string
+          username: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          username?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          username?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_info_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          username: string | null
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
