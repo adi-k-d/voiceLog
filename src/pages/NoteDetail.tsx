@@ -84,8 +84,8 @@ const NoteDetail: React.FC = () => {
   const isOwner = note.userId === user?.id;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
+    <div className="container mx-auto px-4 py-4 sm:py-8">
+      <div className="mb-4 sm:mb-6">
         <Button
           variant="ghost"
           onClick={() => navigate(-1)}
@@ -97,10 +97,10 @@ const NoteDetail: React.FC = () => {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">Note Details</h1>
-            <div className="flex items-center gap-2">
+        <CardHeader className="space-y-4">
+          <div className="space-y-4">
+            <h1 className="text-xl sm:text-2xl font-bold">Note Details</h1>
+            <div className="flex flex-wrap gap-2">
               <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                 {note.category}
               </span>
@@ -113,13 +113,14 @@ const NoteDetail: React.FC = () => {
               </span>
             </div>
           </div>
-          <div className="flex gap-2">
+          
+          <div className="flex flex-wrap gap-2">
             {isOwner && (
               <>
                 <Button
                   variant="outline"
                   onClick={() => setIsEditorOpen(true)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 flex-1 sm:flex-none"
                 >
                   <Pencil className="h-4 w-4" />
                   Edit
@@ -127,7 +128,7 @@ const NoteDetail: React.FC = () => {
                 <Button
                   variant="destructive"
                   onClick={handleDelete}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 flex-1 sm:flex-none"
                 >
                   <Trash2 className="h-4 w-4" />
                   Delete
@@ -137,73 +138,73 @@ const NoteDetail: React.FC = () => {
             {note.category === 'Customer Complaints' && note.status !== 'Completed' && (
               <Button
                 onClick={handleCloseIssue}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white"
               >
                 Close Issue
               </Button>
             )}
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
+        
+        <CardContent className="space-y-6">
+          <div>
+            <h2 className="text-lg font-semibold mb-2">Content</h2>
+            <p className="text-gray-700 whitespace-pre-wrap text-sm sm:text-base">{note.text}</p>
+          </div>
+
+          {note.category === 'Customer Complaints' && (
             <div>
-              <h2 className="text-lg font-semibold mb-2">Content</h2>
-              <p className="text-gray-700 whitespace-pre-wrap">{note.text}</p>
-            </div>
-
-            {note.category === 'Customer Complaints' && (
-              <div>
-                <h2 className="text-lg font-semibold mb-2">Work Updates</h2>
-                {note.workUpdates && note.workUpdates.length > 0 && (
-                  <div className="mb-4 space-y-2">
-                    {note.workUpdates.map((update, index) => (
-                      <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="text-sm text-gray-600">
-                            {new Date(update.timestamp).toLocaleString()}
-                          </span>
-                          <span className="text-sm text-gray-600">
-                            {update.userEmail}
-                          </span>
-                        </div>
-                        <p className="text-gray-700">{update.text}</p>
+              <h2 className="text-lg font-semibold mb-2">Work Updates</h2>
+              {note.workUpdates && note.workUpdates.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  {note.workUpdates.map((update, index) => (
+                    <div key={index} className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-0 mb-2">
+                        <span className="text-sm text-gray-600">
+                          {new Date(update.timestamp).toLocaleString()}
+                        </span>
+                        <span className="text-sm text-gray-600">
+                          {update.userEmail}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Textarea
-                    className="min-h-[100px] text-base resize-none"
-                    placeholder="Add a work update..."
-                    value={workUpdateText}
-                    onChange={(e) => setWorkUpdateText(e.target.value)}
-                  />
-                  <Button
-                    onClick={handleAddWorkUpdate}
-                    disabled={!workUpdateText.trim()}
-                  >
-                    Add Update
-                  </Button>
+                      <p className="text-gray-700 text-sm sm:text-base">{update.text}</p>
+                    </div>
+                  ))}
                 </div>
+              )}
+              <div className="space-y-2">
+                <Textarea
+                  className="min-h-[100px] text-sm sm:text-base resize-none"
+                  placeholder="Add a work update..."
+                  value={workUpdateText}
+                  onChange={(e) => setWorkUpdateText(e.target.value)}
+                />
+                <Button
+                  onClick={handleAddWorkUpdate}
+                  disabled={!workUpdateText.trim()}
+                  className="w-full sm:w-auto"
+                >
+                  Add Update
+                </Button>
               </div>
-            )}
+            </div>
+          )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Created By</h3>
-                <p className="text-gray-700">{note.useremail}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Assigned To</h3>
-                <p className="text-gray-700">{note.assignedTo || 'Not assigned'}</p>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Created By</h3>
+              <p className="text-gray-700 text-sm sm:text-base">{note.useremail}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Assigned To</h3>
+              <p className="text-gray-700 text-sm sm:text-base">{note.assignedTo || 'Not assigned'}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md w-[95vw]">
           <TranscriptionEditor
             transcription={note.text}
             category={note.category}

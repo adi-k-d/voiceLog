@@ -89,7 +89,7 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onCreateNew }) => {
           <Card 
             key={note.id} 
             className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => navigate(`/note/${note.id}`)}
+            onClick={() => navigate(`/notes/${note.id}`)}
           >
             <CardHeader className="space-y-2">
               <div className="flex justify-between items-start">
