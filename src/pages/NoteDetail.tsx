@@ -98,51 +98,65 @@ const NoteDetail: React.FC = () => {
 
       <Card>
         <CardHeader className="space-y-4">
-          <div className="space-y-4">
-            <h1 className="text-xl sm:text-2xl font-bold">Note Details</h1>
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                {note.category}
-              </span>
-              <span className={`inline-block px-3 py-1 rounded-full text-sm ${
-                note.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                note.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {note.status}
-              </span>
+          <div className="space-y-4 sm:space-y-0 sm:flex sm:items-start sm:justify-between">
+            <div className="space-y-4 w-full sm:w-auto">
+              <h1 className="text-xl sm:text-2xl font-bold">Note Details</h1>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm text-center">
+                  {note.category}
+                </span>
+                <span className={`inline-block px-3 py-1 rounded-full text-sm text-center ${
+                  note.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                  note.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {note.status}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-2 sm:items-end">
+              {isOwner && (
+                <>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditorOpen(true)}
+                      className="flex items-center gap-2 flex-1 sm:flex-none sm:w-32"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Button>
+                    {note.category === 'Customer Complaints' && note.status !== 'Completed' && (
+                      <Button
+                        onClick={handleCloseIssue}
+                        className="flex items-center gap-2 flex-1 sm:flex-none sm:w-32 bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        Close Issue
+                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    className="flex items-center gap-2 w-full sm:w-32"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </Button>
+                </>
+              )}
             </div>
           </div>
-          
-          <div className="flex flex-wrap gap-2">
-            {isOwner && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditorOpen(true)}
-                  className="flex items-center gap-2 flex-1 sm:flex-none"
-                >
-                  <Pencil className="h-4 w-4" />
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDelete}
-                  className="flex items-center gap-2 flex-1 sm:flex-none"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </Button>
-              </>
-            )}
-            {note.category === 'Customer Complaints' && note.status !== 'Completed' && (
-              <Button
-                onClick={handleCloseIssue}
-                className="flex items-center gap-2 flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white"
-              >
-                Close Issue
-              </Button>
-            )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Created By</h3>
+              <p className="text-gray-700 text-sm sm:text-base">{note.useremail}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Assigned To</h3>
+              <p className="text-gray-700 text-sm sm:text-base">{note.assignedTo || 'Not assigned'}</p>
+            </div>
           </div>
         </CardHeader>
         
@@ -151,6 +165,7 @@ const NoteDetail: React.FC = () => {
             <h2 className="text-lg font-semibold mb-2">Content</h2>
             <p className="text-gray-700 whitespace-pre-wrap text-sm sm:text-base">{note.text}</p>
           </div>
+         
 
           {note.category === 'Customer Complaints' && (
             <div>
@@ -182,7 +197,7 @@ const NoteDetail: React.FC = () => {
                 <Button
                   onClick={handleAddWorkUpdate}
                   disabled={!workUpdateText.trim()}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Add Update
                 </Button>
@@ -190,16 +205,7 @@ const NoteDetail: React.FC = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Created By</h3>
-              <p className="text-gray-700 text-sm sm:text-base">{note.useremail}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Assigned To</h3>
-              <p className="text-gray-700 text-sm sm:text-base">{note.assignedTo || 'Not assigned'}</p>
-            </div>
-          </div>
+          
         </CardContent>
       </Card>
 
