@@ -8,6 +8,8 @@ import { useNoteContext } from '@/context/NoteContext';
 import TranscriptionEditor from '@/components/TranscriptionEditor';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Note, WorkUpdate } from '@/components/NoteList';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 import { useUsers } from '@/hooks/useUsers';
 
 const NoteDetail: React.FC = () => {
@@ -18,6 +20,7 @@ const NoteDetail: React.FC = () => {
   const { users, loading: usersLoading } = useUsers();
   const [note, setNote] = useState<Note | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [workUpdateText, setWorkUpdateText] = useState('');
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -31,7 +34,7 @@ const NoteDetail: React.FC = () => {
 
   const handleSaveEdit = async (text: string, workUpdates?: WorkUpdate[], status?: string, assignedTo?: string) => {
     if (note) {
-      await updateNote(note.id, text, workUpdates, status || note.status || 'In Progress', assignedTo);
+      await updateNote(note.id, text, workUpdates, status, assignedTo);
       setIsEditorOpen(false);
       // Refresh note data
       const updatedNote = await getNote(note.id);
@@ -51,6 +54,26 @@ const NoteDetail: React.FC = () => {
     if (note) {
       await deleteNote(note.id);
       navigate('/');
+    }
+  };
+
+  const handleAddWorkUpdate = async () => {
+    if (workUpdateText.trim() && note && user) {
+      const newWorkUpdate: WorkUpdate = {
+        text: workUpdateText.trim(),
+        timestamp: new Date().toISOString(),
+        userEmail: user.email || ''
+      };
+      const updatedWorkUpdates = [...(note.workUpdates || []), newWorkUpdate];
+      const newStatus = note.status === 'Completed' ? 'Completed' : 'In Progress';
+      await updateNote(note.id, note.text, updatedWorkUpdates, newStatus, note.assignedTo);
+      setWorkUpdateText('');
+      // Refresh note data
+      const updatedNote = await getNote(note.id);
+      setNote(updatedNote);
+      toast.success('Work update added.');
+    } else if (!workUpdateText.trim()) {
+      toast.error('Please enter some text for the work update.');
     }
   };
 
@@ -128,23 +151,39 @@ const NoteDetail: React.FC = () => {
               <p className="text-gray-700 whitespace-pre-wrap">{note.text}</p>
             </div>
 
-            {note.workUpdates && note.workUpdates.length > 0 && (
+            {note.category === 'Customer Complaints' && (
               <div>
                 <h2 className="text-lg font-semibold mb-2">Work Updates</h2>
-                <div className="space-y-4">
-                  {note.workUpdates.map((update, index) => (
-                    <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-sm text-gray-600">
-                          {new Date(update.timestamp).toLocaleString()}
-                        </span>
-                        <span className="text-sm text-gray-600">
-                          {update.userEmail}
-                        </span>
+                {note.workUpdates && note.workUpdates.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    {note.workUpdates.map((update, index) => (
+                      <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="text-sm text-gray-600">
+                            {new Date(update.timestamp).toLocaleString()}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            {update.userEmail}
+                          </span>
+                        </div>
+                        <p className="text-gray-700">{update.text}</p>
                       </div>
-                      <p className="text-gray-700">{update.text}</p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Textarea
+                    className="min-h-[100px] text-base resize-none"
+                    placeholder="Add a work update..."
+                    value={workUpdateText}
+                    onChange={(e) => setWorkUpdateText(e.target.value)}
+                  />
+                  <Button
+                    onClick={handleAddWorkUpdate}
+                    disabled={!workUpdateText.trim()}
+                  >
+                    Add Update
+                  </Button>
                 </div>
               </div>
             )}

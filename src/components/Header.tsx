@@ -1,4 +1,3 @@
-
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,13 +9,12 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ChevronDown, Mic } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 interface HeaderProps {
-  onVoiceNoteClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onVoiceNoteClick }) => {
+const Header: React.FC<HeaderProps> = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -46,7 +44,7 @@ const Header: React.FC<HeaderProps> = ({ onVoiceNoteClick }) => {
           <div>
             <span className="text-lg font-bold text-gray-800">VoiceLog</span>
             <br />
-            <span className="text-xs text-gray-600">Tech</span>
+           
           </div>
         </Link>
 
@@ -69,14 +67,6 @@ const Header: React.FC<HeaderProps> = ({ onVoiceNoteClick }) => {
 
         {/* Right Section */}
         <div className="flex items-center gap-3">
-          {/* Voice Note Button */}
-          {user && onVoiceNoteClick && (
-            <Button onClick={onVoiceNoteClick} className="bg-orange-500 hover:bg-orange-600">
-              <Mic className="h-4 w-4 mr-2" />
-              Record Note
-            </Button>
-          )}
-          
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

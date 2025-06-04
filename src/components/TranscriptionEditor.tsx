@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { NoteCategory } from './CategorySelector';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAuth } from '@/hooks/useAuth';
+
 
 interface WorkUpdate {
   text: string;
@@ -24,52 +24,27 @@ interface TranscriptionEditorProps {
   usersLoading: boolean;
 }
 
-const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({ 
-  transcription, 
+const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
+  transcription,
   category,
   onSave,
   onCancel,
-  workUpdates: initialWorkUpdates = [],
+  workUpdates: initialWorkUpdates,
   status: initialStatus,
   assignedTo: initialAssignedTo,
   users,
   usersLoading
 }) => {
   const [text, setText] = useState(transcription);
-  const [workUpdateText, setWorkUpdateText] = useState('');
-  const [workUpdates, setWorkUpdates] = useState<WorkUpdate[]>(initialWorkUpdates);
-  const [status, setStatus] = useState(initialStatus || 'Not Started');
-  const [assignedTo, setAssignedTo] = useState(initialAssignedTo || '');
-  const { user } = useAuth();
-
-  const handleWorkUpdateChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setWorkUpdateText(e.target.value);
-  };
-
-  const addWorkUpdate = () => {
-    if (workUpdateText.trim()) {
-      const newWorkUpdate: WorkUpdate = {
-        text: workUpdateText.trim(),
-        timestamp: new Date().toISOString(),
-        userEmail: user?.email || ''
-      };
-      setWorkUpdates([...workUpdates, newWorkUpdate]);
-      setWorkUpdateText('');
-      setStatus('In Progress');
-    }
-  };
-
+  const [currentAssignedTo, setCurrentAssignedTo] = useState(initialAssignedTo || '');
+  
   const handleSave = () => {
     if (text.trim() === '') {
       toast.error('Please enter some text before saving.');
       return;
     }
     
-    if (category === 'Customer Complaints') {
-      onSave(text, workUpdates, status, assignedTo);
-    } else {
-      onSave(text);
-    }
+    onSave(text, initialWorkUpdates || [], initialStatus || 'Not Started', currentAssignedTo || undefined);
     toast.success('Note saved successfully!');
   };
 
@@ -97,29 +72,8 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
           {category === 'Customer Complaints' && (
             <>
               <div>
-                <label className="block text-sm font-medium mb-2">Status</label>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Not Started">Not Started</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Assigned By</label>
-                <div className="px-3 py-2 bg-gray-50 rounded-md text-sm text-gray-600">
-                  {user?.email}
-                </div>
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium mb-2">Assigned To</label>
-                <Select value={assignedTo} onValueChange={setAssignedTo}>
+                <Select value={currentAssignedTo} onValueChange={setCurrentAssignedTo}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select user" />
                   </SelectTrigger>
@@ -136,40 +90,9 @@ const TranscriptionEditor: React.FC<TranscriptionEditorProps> = ({
                   </SelectContent>
                 </Select>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Work Updates</label>
-                {workUpdates.length > 0 && (
-                  <div className="mb-4 space-y-2">
-                    {workUpdates.map((update, index) => (
-                      <div key={index} className="p-3 bg-gray-50 rounded-md">
-                        <div className="text-sm text-gray-600">
-                          {new Date(update.timestamp).toLocaleString()} - {update.userEmail}
-                        </div>
-                        <div className="mt-1">{update.text}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Textarea
-                    className="min-h-[100px] text-base resize-none"
-                    placeholder="Enter new work update..."
-                    value={workUpdateText}
-                    onChange={handleWorkUpdateChange}
-                  />
-                  <Button 
-                    variant="outline" 
-                    onClick={addWorkUpdate}
-                    disabled={!workUpdateText.trim()}
-                  >
-                    Add Update
-                  </Button>
-                </div>
-              </div>
             </>
           )}
-          
+
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onCancel}>
               Cancel
